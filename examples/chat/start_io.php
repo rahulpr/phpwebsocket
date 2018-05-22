@@ -20,6 +20,15 @@ $io->on('connection', function ($socket) {
             'username' => $socket->username,
             'message' => $data
         ));
+        // write to admin file
+        file_put_contents('public/chat/admin.txt', 'Admin: ' . $data . PHP_EOL, FILE_APPEND | LOCK_EX);
+        // write to all client files
+        $client_files = @scandir('public/chat/clients');
+        foreach ($client_files as $f) {
+            if ($f !== '.' && $f !== '..') {
+                file_put_contents('public/chat/clients/' . $f, 'Admin: ' . $data . PHP_EOL, FILE_APPEND | LOCK_EX);
+            }
+        }
     });
 
     // when the admin emits 'new privatemessage', this listens and executes
@@ -30,17 +39,11 @@ $io->on('connection', function ($socket) {
             'message' => $data['message'],
             'to' => $data['to']
         ));
+        // write to admin file
+        file_put_contents('public/chat/admin.txt', 'Admin: ' . $data['message'] . PHP_EOL, FILE_APPEND | LOCK_EX);
+        // write to user file
+        file_put_contents('public/chat/clients/' . $data['to'] . '.txt', 'Admin: ' . $data['message'] . PHP_EOL, FILE_APPEND | LOCK_EX);
     });
-
-    // when the client emits 'new message', this listens and executes
-    // sending to admin usig broadcast
-    /*$socket->on('new clientmessage', function ($data) use ($socket) {
-         // we tell the client to execute 'new message'
-         $socket->broadcast->emit('new clientmessage', array(
-             'username' => $socket->username,
-             'message' => $data
-         ));
-     });*/
 
     $socket->on('new clientmessage', function ($data) use ($socket) {
         // we tell the client to execute 'new message'
@@ -48,6 +51,10 @@ $io->on('connection', function ($socket) {
             'username' => $socket->username,
             'message' => $data
         ));
+        // write to admin file
+        file_put_contents('public/chat/admin.txt', $socket->username . ': ' . $data . PHP_EOL, FILE_APPEND | LOCK_EX);
+        // write to user file
+        file_put_contents('public/chat/clients/' . $socket->username . '.txt', $socket->username . ': ' . $data . PHP_EOL, FILE_APPEND | LOCK_EX);
     });
 
 
@@ -61,7 +68,8 @@ $io->on('connection', function ($socket) {
         ++$numUsers;
         $socket->addedUser = true;
         $socket->emit('login', array(
-            'numUsers' => $numUsers
+            'numUsers' => count($usernames),
+            'usernames' => $usernames
         ));
         // echo globally (all clients) that a person has connected
         $socket->broadcast->emit('user joined', array(
@@ -72,6 +80,13 @@ $io->on('connection', function ($socket) {
 
         // new addition
         $socket->join($socket->username);
+        // create a chat file for user
+        if($username=='Admin'){
+            file_put_contents('public/chat/admin.txt', '');
+        }else{
+            file_put_contents('public/chat/clients/' . $username . '.txt', '');
+        }
+        
     });
 
     // when the client emits 'typing', we broadcast it to others
@@ -110,7 +125,6 @@ $io->on('connection', function ($socket) {
         global $usernames, $numUsers;
         // remove the username from global usernames list
         if ($socket->addedUser) {
-            echo "Inside User = " . $username . PHP_EOL;
             unset($usernames[$username]);
             --$numUsers;
             // echo globally that this client has left
@@ -119,31 +133,14 @@ $io->on('connection', function ($socket) {
                 'numUsers' => count($usernames),
                 'usernames' => $usernames
             ));
-        }
-    });
 
-    // when the admin asks for active clients
-    $socket->on('get active', function () use ($socket) {
-
-        echo 'GET ACTIVE' . PHP_EOL;
-
-        global $usernames;
-        // remove the username from global usernames list
-        if ($socket->addedUser) {
-            // echo globally that this client has left
-            $socket->broadcast->emit('active clients', array(
+            $socket->emit('user left', array(
+                'username' => $username,
                 'numUsers' => count($usernames),
                 'usernames' => $usernames
             ));
-        } else {
-            $socket->broadcast->emit('active clients', array(
-                'numUsers' => 0,
-                'usernames' => []
-            ));
         }
     });
-
-
 });
 
 if (!defined('GLOBAL_START')) {

@@ -9,28 +9,26 @@ $(function () {
 
     // Initialize varibles
     var $window = $(window);
-    var $usernameInput = $('.usernameInput'); // Input for username
     var $messages = $('.messages'); // Messages area
     var $inputMessage = $('.inputMessage'); // Input message input box
-
-    var $loginPage = $('.login.page'); // The login page
-    var $chatPage = $('.chat.page'); // The chatroom page
 
     // Prompt for setting a username
     var username;
     var connected = false;
     var typing = false;
     var lastTypingTime;
-    var $currentInput = $usernameInput.focus();
 
     // var socket = io('http://'+document.domain+':2020');
-    // var socket = io('http://127.0.0.1:2020');
-    var socket = io('http://192.168.1.247:2020');
+    var socket = io('http://127.0.0.1:2020');
+//    var socket = io('http://192.168.1.247:2020');
+    var adminChatFilePath = 'http://localhost/phpsocket/examples/chat/public/';
+
+    $('#count').text(0);
 
     function clientListGenerate(data) {
         // add to active client list
         var clientsHtml = "";
-        // console.log(data.usernames);
+
         if (typeof data.usernames !== 'undefined' && typeof data.usernames['Admin'] !== 'undefined') {
             delete data.usernames['Admin']; // no need to show admin in client list
         }
@@ -38,19 +36,21 @@ $(function () {
         for (var i in data.usernames) {
             clientsHtml += "<li><span data-username='" + data.usernames[i] + "' class='private-msg'>" + data.usernames[i] + "</span> - <button data-username='" + data.usernames[i] + "' class='drop'>Drop</button></span></li>";
         }
+
         $('#client-list').html(clientsHtml);
-        $('#count').text(data.numUsers);
+        $('#count').text((data.numUsers < 0) ? 0 : data.numUsers);
     }
 
     function addParticipantsMessage(data) {
         var message = '';
         data.numUsers -= 1; // do not count admin
         if (data.numUsers === 1) {
-            message += "there's 1 participant";
+            message += "there's 1 client";
         } else {
-            message += "there are " + data.numUsers + " participants";
+            message += "there are " + data.numUsers + " clients";
         }
         log(message);
+        clientListGenerate(data);
     }
 
     $(document).on('click', '.private-msg', function () {
@@ -79,17 +79,16 @@ $(function () {
 
     // Sets the client's username
     function setUsername(usr) {
-        // username = cleanInput($usernameInput.val().trim());
         username = usr;
         // If the username is valid
         if (username) {
-            $loginPage.fadeOut();
-            $chatPage.show();
-            $loginPage.off('click');
-            // $currentInput = $inputMessage.focus();
-
             // Tell the server your username
             socket.emit('add user', username);
+            console.log(345);
+            $.get(adminChatFilePath + 'chat/admin.txt', function (chats) {
+                console.log(chats);
+                $messages.append(chats);
+            });
         }
     }
 
@@ -126,7 +125,7 @@ $(function () {
     // Log a message
     function log(message, options) {
         var $el = $('<li>').addClass('log').text(message);
-        addMessageElement($el, options);
+//        addMessageElement($el, options);
     }
 
     // Adds the visual chat message to the message list
@@ -140,16 +139,16 @@ $(function () {
         }
 
         var $usernameDiv = $('<span class="username"/>')
-            .text(data.username)
-            .css('color', getUsernameColor(data.username));
+                .text(data.username)
+                .css('color', getUsernameColor(data.username));
         var $messageBodyDiv = $('<span class="messageBody">')
-            .text(data.message);
+                .text(data.message);
 
         var typingClass = data.typing ? 'typing' : '';
         var $messageDiv = $('<li class="message"/>')
-            .data('username', data.username)
-            .addClass(typingClass)
-            .append($usernameDiv, $messageBodyDiv);
+                .data('username', data.username)
+                .addClass(typingClass)
+                .append($usernameDiv, $messageBodyDiv);
 
         addMessageElement($messageDiv, options);
     }
@@ -285,10 +284,6 @@ $(function () {
     // Keyboard events
 
     $window.keydown(function (event) {
-        // Auto-focus the current input when a key is typed
-        if (!(event.ctrlKey || event.metaKey || event.altKey)) {
-            $currentInput.focus();
-        }
         // When the client hits ENTER on their keyboard
         if (event.which === 13) {
             if (username) {
@@ -305,17 +300,6 @@ $(function () {
         updateTyping();
     });
 
-    // Click events
-
-    // Focus input when clicking anywhere on login page
-    $loginPage.click(function () {
-        $currentInput.focus();
-    });
-
-    // Focus input when clicking on the message input's border
-    $inputMessage.click(function () {
-        // $inputMessage.focus();
-    });
 
     // Socket events
 
@@ -339,21 +323,8 @@ $(function () {
     socket.on('user joined', function (data) {
         log(data.username + ' joined');
         addParticipantsMessage(data);
-
-        storeClientToCookie(data.username);
+        clientListGenerate(data);
     });
-
-    function storeClientToCookie(client) {
-        var activeClients = [];
-        if (checkCookie('activeClients')) {
-            activeClients = getCookie('activeClients');
-        }
-        activeClients.push(client);
-        setCookie('activeClients', activeClients, 30);
-        clientListGenerate({
-            'data': activeClients
-        });
-    }
 
     // Whenever the server emits 'user left', log it in the chat body
     socket.on('user left', function (data) {

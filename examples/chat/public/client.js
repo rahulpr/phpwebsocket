@@ -21,11 +21,10 @@ $(function () {
     var connected = false;
     var typing = false;
     var lastTypingTime;
-    var $currentInput = $usernameInput.focus();
 
-    // var socket = io('http://'+document.domain+':2020');
-    // var socket = io('http://127.0.0.1:2020');
-    var host = '192.168.1.247';
+//    var host = '192.168.1.247';
+//    var host = '127.0.0.1';
+    var host = 'localhost';
     var socket = io('http://' + host + ':2020');
     var url = 'http://' + host + '/phpsocket/examples/chat/public/';
 
@@ -78,8 +77,8 @@ $(function () {
         $("#client-name").text('');
         $loginPage.fadeIn();
         $chatPage.hide();
-        // $loginPage.on('click');
         deleteCookie('username');
+        username = null;
     }
 
     // starting point of script
@@ -143,7 +142,7 @@ $(function () {
             $loginPage.fadeOut();
             $chatPage.show();
             // $loginPage.off('click');
-            $currentInput = $inputMessage.focus();
+//            $currentInput = $inputMessage.focus();
 
             // Tell the server your username
             socket.emit('add user', username);
@@ -190,16 +189,16 @@ $(function () {
         }
 
         var $usernameDiv = $('<span class="username"/>')
-            .text(data.username)
-            .css('color', getUsernameColor(data.username));
+                .text(data.username)
+                .css('color', getUsernameColor(data.username));
         var $messageBodyDiv = $('<span class="messageBody">')
-            .text(data.message);
+                .text(data.message);
 
         var typingClass = data.typing ? 'typing' : '';
         var $messageDiv = $('<li class="message"/>')
-            .data('username', data.username)
-            .addClass(typingClass)
-            .append($usernameDiv, $messageBodyDiv);
+                .data('username', data.username)
+                .addClass(typingClass)
+                .append($usernameDiv, $messageBodyDiv);
 
         addMessageElement($messageDiv, options);
     }
@@ -298,7 +297,7 @@ $(function () {
     $window.keydown(function (event) {
         // Auto-focus the current input when a key is typed
         if (!(event.ctrlKey || event.metaKey || event.altKey)) {
-            $currentInput.focus();
+//            $currentInput.focus();
         }
         // When the client hits ENTER on their keyboard
         if (event.which === 13) {
@@ -318,16 +317,6 @@ $(function () {
     });
 
     // Click events
-
-    // Focus input when clicking anywhere on login page
-    $loginPage.click(function () {
-        $currentInput.focus();
-    });
-
-    // Focus input when clicking on the message input's border
-    $inputMessage.click(function () {
-        $inputMessage.focus();
-    });
 
     $(document).on('click', '#logout', function () {
         socket.emit('force disconnect', username);
@@ -363,6 +352,10 @@ $(function () {
         log(data.username + ' left');
         addParticipantsMessage(data);
         removeChatTyping(data);
+        // automatic logout when admin drops client connection
+        if(data.username == username){
+            $('#logout').trigger('click');
+        }
     });
 
     // Whenever the server emits 'typing', show the typing message
