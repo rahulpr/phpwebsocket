@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!--<base href="http://localhost/phpsocket/examples/chat/public" />-->
+    <title>Client</title>
+    <base href="http://192.168.1.247" />
+    <link rel="stylesheet" href="/phpsocket/examples/chat/public/style.css">
+</head>
+<body>
+<ul class="pages">
+    <li class="chat page">
+        <div id="after-logged">
+            <h2 id="client-name"></h2>
+            <a href="javascript:void(0)" id="logout">Logout</a>
+        </div>
+        <div class="chatArea">
+            <ul class="messages"></ul>
+        </div>
+        <input class="inputMessage" placeholder="Type here..."/>
+    </li>
+    <li class="login page">
+        <div class="form">
+            <h3 class="title">What's your nickname?</h3>
+            <input class="usernameInput" type="text" maxlength="14"/>
+        </div>
+    </li>
+</ul>
+
+<script src="/phpsocket/examples/chat/public/jquery.min.js"></script>
+<script src="/phpsocket/examples/chat/public/socket.io-client/socket.io.js"></script>
+<script src="/phpsocket/examples/chat/public/client.js"></script>
+</body>
+</html>
