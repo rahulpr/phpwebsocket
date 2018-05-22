@@ -27,14 +27,6 @@ $(function () {
     // var socket = io('http://127.0.0.1:2020');
     var socket = io('http://192.168.1.247:2020');
 
-    socket.emit('get active');
-
-    socket.on('active clients', function (data) {
-        console.log(data);
-        clientListGenerate(data);
-    });
-
-
     function clientListGenerate(data) {
         // add to active client list
         var clientsHtml = "";
@@ -251,6 +243,45 @@ $(function () {
         return COLORS[index];
     }
 
+    // Cookie Functions
+
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+        var expires = "expires=" + d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+
+    function checkCookie(cookieName) {
+        var user = getCookie(cookieName);
+        if (user != "") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function deleteCookie(name) {
+        document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+    }
+
+    // End cookie functions
+
     // Keyboard events
 
     $window.keydown(function (event) {
@@ -308,13 +339,24 @@ $(function () {
     socket.on('user joined', function (data) {
         log(data.username + ' joined');
         addParticipantsMessage(data);
-        clientListGenerate(data);
+
+        storeClientToCookie(data.username);
     });
+
+    function storeClientToCookie(client) {
+        var activeClients = [];
+        if (checkCookie('activeClients')) {
+            activeClients = getCookie('activeClients');
+        }
+        activeClients.push(client);
+        setCookie('activeClients', activeClients, 30);
+        clientListGenerate({
+            'data': activeClients
+        });
+    }
 
     // Whenever the server emits 'user left', log it in the chat body
     socket.on('user left', function (data) {
-        console.log(data);
-
         log(data.username + ' left');
         addParticipantsMessage(data);
         removeChatTyping(data);
