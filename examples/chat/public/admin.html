@@ -1,32 +1,41 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <!--<base href="http://localhost/phpsocket/examples/chat/public" />-->
-  <title>Admin</title>
-  <!--<base href="http://192.168.1.247" />-->
-    <base href="http://localhost" />
-  <link rel="stylesheet" href="/phpsocket/examples/chat/public/style.css">
+    <meta charset="UTF-8">
+    <title>Admin</title>
+    <base href="http://192.168.1.247/phpwebsocket/examples/chat/public/"/>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <ul class="pages">
+<ul class="pages">
+    <li>
+        <div id="after-logged">
+            <ul class="header">
+                <li><span id="client-name">Admin Panel</span></li>
+            </ul>
+        </div>
+    </li>
     <li class="chat active">
-      <h2>Active Clients(<span id="count"></span>)</h2>
-      <div class="clients">
-        <ul id="client-list"></ul>
-      </div>
-      <!--<div id="private-div"></div>-->
+        <!--<div class="clients">-->
+            <!--<h5 class="client-hd"><u>Clients (<span id="count"></span>)</u></h5>-->
+            <!--<ul id="client-list"></ul>-->
+        <!--</div>-->
     </li>
-    <li class="chat page" style="display: block;">
-      <div class="chatArea">
-        <ul class="messages"></ul>
-      </div>
-      <input class="inputMessage" placeholder="Type here..."/>
+    <li class="chat page admin" style="display: block;">
+        <div class="chatArea admin">
+            <ul class="messages"></ul>
+        </div>
+        <input class="inputMessage admin" placeholder="Type here..."/>
     </li>
-  </ul>
+</ul>
 
-  <script src="/phpsocket/examples/chat/public/jquery.min.js"></script>
-  <script src="/phpsocket/examples/chat/public/socket.io-client/socket.io.js"></script>
-  <script src="/phpsocket/examples/chat/public/admin.js"></script>
+<div class="clients">
+    <div class="client-hd">Clients (<span id="count"></span>)</div>
+    <ul id="client-list"></ul>
+</div>
+
+<script src="jquery.min.js"></script>
+<script src="socket.io-client/socket.io.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>

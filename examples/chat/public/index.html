@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!--<base href="http://localhost/phpsocket/examples/chat/public" />-->
     <title>Client</title>
-    <!--<base href="http://192.168.1.247" />-->
-    <base href="http://localhost" />
-    <link rel="stylesheet" href="/phpsocket/examples/chat/public/style.css">
+    <base href="http://192.168.1.247/phpwebsocket/examples/chat/public/" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <ul class="pages">
     <li class="chat page">
         <div id="after-logged">
-            <h2 id="client-name"></h2>
-            <a href="javascript:void(0)" id="logout">Logout</a>
+            <ul class="header">
+                <li><span id="client-name"></span></li>
+                <li><a href="javascript:void(0)" id="logout">Logout</a></li>
+            </ul>
         </div>
         <div class="chatArea">
             <ul class="messages"></ul>
@@ -28,8 +28,8 @@
     </li>
 </ul>
 
-<script src="/phpsocket/examples/chat/public/jquery.min.js"></script>
-<script src="/phpsocket/examples/chat/public/socket.io-client/socket.io.js"></script>
-<script src="/phpsocket/examples/chat/public/client.js"></script>
+<script src="jquery.min.js"></script>
+<script src="socket.io-client/socket.io.js"></script>
+<script src="client.js"></script>
 </body>
 </html>

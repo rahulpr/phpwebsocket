@@ -1,4 +1,5 @@
 $(function () {
+
     var FADE_TIME = 150; // ms
     var TYPING_TIMER_LENGTH = 400; // ms
     var COLORS = [
@@ -19,26 +20,60 @@ $(function () {
     var lastTypingTime;
 
     // var socket = io('http://'+document.domain+':2020');
-    var socket = io('http://127.0.0.1:2020');
-//    var socket = io('http://192.168.1.247:2020');
-    var adminChatFilePath = 'http://localhost/phpsocket/examples/chat/public/';
+    var host = '192.168.1.247';
+    var socket = io('http://' + host + ':2020');
+    var projectPath = 'http://' + host + '/phpwebsocket/examples/chat/public/';
 
     $('#count').text(0);
+
+    // starting point, for page refresh
+    setUsername('admin'); // call this at the start for auto login
+
+    // Sets the client's username
+    function setUsername(usr) {
+        username = usr;
+        // If the username is valid
+        if (username) {
+            // Tell the server your username
+            socket.emit('add user', username);
+
+            readChat(username);
+        }
+    }
+
+    function readChat(username) {
+        $.ajax({
+            url: projectPath + 'db/readchat.php',
+            type: 'POST',
+            data: {
+                username: username
+            },
+            success: function (chats) {
+                $messages.html(chats);
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+    }
 
     function clientListGenerate(data) {
         // add to active client list
         var clientsHtml = "";
 
-        if (typeof data.usernames !== 'undefined' && typeof data.usernames['Admin'] !== 'undefined') {
-            delete data.usernames['Admin']; // no need to show admin in client list
+        if (typeof data.usernames !== 'undefined' && typeof data.usernames['admin'] !== 'undefined') {
+            delete data.usernames['admin']; // no need to show admin in client list
         }
 
         for (var i in data.usernames) {
-            clientsHtml += "<li><span data-username='" + data.usernames[i] + "' class='private-msg'>" + data.usernames[i] + "</span> - <button data-username='" + data.usernames[i] + "' class='drop'>Drop</button></span></li>";
+            clientsHtml += "<li>" + data.usernames[i]
+                + " - <span data-username='" + data.usernames[i] + "' class='drop'>Disconect</span>"
+                + " - <span data-username='" + data.usernames[i] + "' class='private-msg'>Message</span>"
+                + "</li>";
         }
 
         $('#client-list').html(clientsHtml);
-        $('#count').text((data.numUsers < 0) ? 0 : data.numUsers);
+        $('#count').text((data.numUsers <= 0) ? 0 : data.numUsers);
     }
 
     function addParticipantsMessage(data) {
@@ -74,23 +109,6 @@ $(function () {
         var username = $(this).data('username');
         socket.emit('force disconnect', username);
     });
-
-    setUsername('Admin'); // call this at the start for auto login
-
-    // Sets the client's username
-    function setUsername(usr) {
-        username = usr;
-        // If the username is valid
-        if (username) {
-            // Tell the server your username
-            socket.emit('add user', username);
-            console.log(345);
-            $.get(adminChatFilePath + 'chat/admin.txt', function (chats) {
-                console.log(chats);
-                $messages.append(chats);
-            });
-        }
-    }
 
     // Sends a chat message
     function sendMessage() {
@@ -138,17 +156,22 @@ $(function () {
             $typingMessages.remove();
         }
 
-        var $usernameDiv = $('<span class="username"/>')
-                .text(data.username)
-                .css('color', getUsernameColor(data.username));
-        var $messageBodyDiv = $('<span class="messageBody">')
-                .text(data.message);
+        /* var $usernameDiv = $('<span class="username"/>')
+             .text(data.username)
+             .css('color', getUsernameColor(data.username));
+         var $messageBodyDiv = $('<span class="messageBody">')
+             .text(data.message);*/
+
+        var $usernameDiv = $('<span/>')
+            .text(data.username + ': ');
+        var $messageBodyDiv = $('<span>')
+            .text(data.message);
 
         var typingClass = data.typing ? 'typing' : '';
         var $messageDiv = $('<li class="message"/>')
-                .data('username', data.username)
-                .addClass(typingClass)
-                .append($usernameDiv, $messageBodyDiv);
+            .data('username', data.username)
+            .addClass(typingClass)
+            .append($usernameDiv, $messageBodyDiv);
 
         addMessageElement($messageDiv, options);
     }

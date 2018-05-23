@@ -22,11 +22,34 @@ $(function () {
     var typing = false;
     var lastTypingTime;
 
-//    var host = '192.168.1.247';
-//    var host = '127.0.0.1';
-    var host = 'localhost';
+    var host = '192.168.1.247';
     var socket = io('http://' + host + ':2020');
-    var url = 'http://' + host + '/phpsocket/examples/chat/public/';
+    var url = 'http://' + host + '/phpwebsocket/examples/chat/public/';
+    var projectPath = 'http://' + host + '/phpwebsocket/examples/chat/public/';
+
+    // starting point of script, for page refresh
+    if (checkCookie('username') && getCookie('username') != '') {
+        username = getCookie('username');
+        afterLoggedIn();
+    } else {
+        afterLogout();
+    }
+
+    function readChat(username) {
+        $.ajax({
+            url: projectPath + 'db/readchat.php',
+            type: 'POST',
+            data: {
+                username: username
+            },
+            success: function (chats) {
+                $messages.html(chats);
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+    }
 
     // Cookie Functions
 
@@ -79,14 +102,6 @@ $(function () {
         $chatPage.hide();
         deleteCookie('username');
         username = null;
-    }
-
-    // starting point of script
-    if (checkCookie('username') && getCookie('username') != '') {
-        username = getCookie('username');
-        afterLoggedIn();
-    } else {
-        afterLogout();
     }
 
 
@@ -146,9 +161,13 @@ $(function () {
 
             // Tell the server your username
             socket.emit('add user', username);
+            readChat(username);
         }
 
-        setCookie('username', username, 30);
+        if (!checkCookie('username')) {
+            setCookie('username', username, 30);
+        }
+
         $("#client-name").text(username);
         $('#after-logged').show();
     }
@@ -188,17 +207,22 @@ $(function () {
             $typingMessages.remove();
         }
 
-        var $usernameDiv = $('<span class="username"/>')
-                .text(data.username)
-                .css('color', getUsernameColor(data.username));
+        /*var $usernameDiv = $('<span class="username"/>')
+            .text(data.username)
+            .css('color', getUsernameColor(data.username));
         var $messageBodyDiv = $('<span class="messageBody">')
-                .text(data.message);
+            .text(data.message);*/
+
+        var $usernameDiv = $('<span/>')
+            .text(data.username + ': ');
+        var $messageBodyDiv = $('<span>')
+            .text(data.message);
 
         var typingClass = data.typing ? 'typing' : '';
         var $messageDiv = $('<li class="message"/>')
-                .data('username', data.username)
-                .addClass(typingClass)
-                .append($usernameDiv, $messageBodyDiv);
+            .data('username', data.username)
+            .addClass(typingClass)
+            .append($usernameDiv, $messageBodyDiv);
 
         addMessageElement($messageDiv, options);
     }
@@ -353,7 +377,7 @@ $(function () {
         addParticipantsMessage(data);
         removeChatTyping(data);
         // automatic logout when admin drops client connection
-        if(data.username == username){
+        if (data.username == username) {
             $('#logout').trigger('click');
         }
     });

@@ -29,6 +29,7 @@ if ($_POST['type'] == 'select') {
     }
 }
 
+// not using
 if ($_POST['type'] == 'update') {
     $sql = "update `users` set `client_socket_id`='" . $_POST['client_socket_id'] . "' where `username`='" . $_POST['username'] . "'";
     $result = $conn->query($sql);
